@@ -1,26 +1,177 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root,
+[data-theme="default"] {
+  color-scheme: light;
+  --background: #f4f7fb;
+  --foreground: #1c2430;
+  --primary: #1d4e89;
+  --primary-foreground: #ffffff;
+  --secondary: #e7eef6;
+  --card: #ffffff;
+  --border: #d5deea;
+  --muted: #5c6b7e;
+  --success: #1f7a4d;
+  --error: #b42318;
+}
+
+[data-theme="blue"] {
+  color-scheme: light;
+  --background: #eef5ff;
+  --foreground: #10233f;
+  --primary: #1554c7;
+  --primary-foreground: #ffffff;
+  --secondary: #d7e6ff;
+  --card: #ffffff;
+  --border: #b9cff5;
+  --muted: #3d5680;
+  --success: #1f7a4d;
+  --error: #b42318;
+}
+
+[data-theme="green"] {
+  color-scheme: light;
+  --background: #f1f8f3;
+  --foreground: #143024;
+  --primary: #1c7c4a;
+  --primary-foreground: #ffffff;
+  --secondary: #d7f0e2;
+  --card: #ffffff;
+  --border: #b7dcc8;
+  --muted: #3e6552;
+  --success: #146b3a;
+  --error: #b42318;
+}
+
+[data-theme="purple"] {
+  color-scheme: light;
+  --background: #f6f2fb;
+  --foreground: #2a1842;
+  --primary: #6d3bb8;
+  --primary-foreground: #ffffff;
+  --secondary: #e7daf8;
+  --card: #ffffff;
+  --border: #d2c0ea;
+  --muted: #5c4a74;
+  --success: #1f7a4d;
+  --error: #b42318;
+}
+
+[data-theme="pink"] {
+  color-scheme: light;
+  --background: #fff3f7;
+  --foreground: #3d1828;
+  --primary: #c43b6e;
+  --primary-foreground: #ffffff;
+  --secondary: #ffd6e4;
+  --card: #ffffff;
+  --border: #f3c2d2;
+  --muted: #7a4a5c;
+  --success: #1f7a4d;
+  --error: #b42318;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #121820;
+  --foreground: #e8eef5;
+  --primary: #7eb0e8;
+  --primary-foreground: #0e1620;
+  --secondary: #243140;
+  --card: #1b2531;
+  --border: #3a4a5e;
+  --muted: #a8b6c6;
+  --success: #7dcea0;
+  --error: #f0a8a0;
+}
+
+[data-theme="cartoon"] {
+  color-scheme: light;
+  --background: #fff6d8;
+  --foreground: #2b2118;
+  --primary: #ef5b2a;
+  --primary-foreground: #fffaf3;
+  --secondary: #ffe08a;
+  --card: #fffdf6;
+  --border: #2b2118;
+  --muted: #6b5344;
+  --success: #1f7a4d;
+  --error: #c4321a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --font-sans: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+[data-theme="cartoon"] body {
+  background-image:
+    radial-gradient(circle at 12% 0%, #ffe08a 0, transparent 26%),
+    radial-gradient(circle at 100% 8%, #ffd0c2 0, transparent 22%);
+}
+
+[data-theme="cartoon"] :is(.rounded-xl, .rounded-2xl) {
+  border-radius: 1.6rem;
+  border-style: solid;
+  border-width: 3px;
+  box-shadow: 4px 4px 0 var(--border);
+}
+
+[data-theme="cartoon"] :is(h1, h2) {
+  font-weight: 800;
+}
+
+.theme-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  border: 2px solid var(--foreground);
+  border-radius: 9999px;
+}
+
+.theme-swatch[data-swatch="default"] {
+  background: #1d4e89;
+}
+
+.theme-swatch[data-swatch="blue"] {
+  background: #1554c7;
+}
+
+.theme-swatch[data-swatch="green"] {
+  background: #1c7c4a;
+}
+
+.theme-swatch[data-swatch="purple"] {
+  background: #6d3bb8;
+}
+
+.theme-swatch[data-swatch="pink"] {
+  background: #c43b6e;
+}
+
+.theme-swatch[data-swatch="dark"] {
+  background: #121820;
+}
+
+.theme-swatch[data-swatch="cartoon"] {
+  background: #ef5b2a;
+}
+
+summary::-webkit-details-marker {
+  display: none;
 }
