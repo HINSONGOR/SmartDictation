@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/content/page-shell";
 import { WordDictationSetup } from "@/components/dictation/WordDictationSetup";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isUuid } from "@/lib/content/parse";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,7 @@ type SelectPageProps = {
 };
 
 export default async function SelectEnglishWordListPage({ params }: SelectPageProps) {
-  await requireUser();
+  await requireUserId();
   const { id } = await params;
 
   if (!isUuid(id)) {

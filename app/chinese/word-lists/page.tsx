@@ -2,13 +2,14 @@ import Link from "next/link";
 import { primaryButtonClass } from "@/components/auth/button-styles";
 import { ConfirmDelete } from "@/components/content/confirm-delete";
 import { MigrationNotice, PageShell } from "@/components/content/page-shell";
-import { requireUser } from "@/lib/auth/require-user";
+import { StartWordListButton } from "@/components/dictation/StartWordListButton";
+import { requireUserId } from "@/lib/auth/require-user";
 import { listWordLists } from "@/lib/content/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChineseWordListsPage() {
-  await requireUser();
+  await requireUserId();
   const result = await listWordLists("zh");
 
   return (
@@ -29,12 +30,7 @@ export default async function ChineseWordListsPage() {
                 <p className="mt-2 text-base text-muted">共 {list.itemCount} 個詞語</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/chinese/word-lists/${list.id}/select`}
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-base font-medium text-primary-foreground"
-                >
-                  開始默書
-                </Link>
+                <StartWordListButton listId={list.id} language="zh" itemCount={list.itemCount} />
                 <Link
                   href={`/chinese/word-lists/${list.id}/edit`}
                   className="inline-flex min-h-12 items-center justify-center rounded-xl border border-border bg-secondary px-4 text-base font-medium text-foreground"

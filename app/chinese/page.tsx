@@ -1,10 +1,10 @@
 import { HubLink, PageShell } from "@/components/content/page-shell";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChinesePage() {
-  await requireUser();
+  await requireUserId();
 
   return (
     <PageShell title="中文默書" description="課文可以選段聆聽或打字。答錯的句子可以在錯題重溫。" backHref="/dashboard" backLabel="返回主頁">

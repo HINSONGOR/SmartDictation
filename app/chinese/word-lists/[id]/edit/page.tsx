@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { MigrationNotice, PageShell } from "@/components/content/page-shell";
 import { WordListEditor } from "@/components/word-lists/word-list-editor";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isUuid } from "@/lib/content/parse";
 import { getWordList } from "@/lib/content/queries";
 
@@ -13,7 +13,7 @@ type EditWordListPageProps = {
 };
 
 export default async function EditChineseWordListPage({ params, searchParams }: EditWordListPageProps) {
-  await requireUser();
+  await requireUserId();
   const { id } = await params;
   const query = await searchParams;
 

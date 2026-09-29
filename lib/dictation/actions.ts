@@ -9,7 +9,7 @@ import { loadMistakeSentences, loadWordItemTexts } from "@/lib/dictation/load-se
 import { recordMistake } from "@/lib/dictation/mistakes";
 import { segmentEnglishSentences, segmentSentences } from "@/lib/dictation/segment";
 import { isChineseVoice, isDictationSpeed, isVoiceForLanguage, type DictationLanguage } from "@/lib/dictation/options";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isMissingSchema } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,7 +33,7 @@ export async function startLessonDictation(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const user = await requireUser();
+  const userId = await requireUserId();
   const lessonIdValue = formData.get("lessonId");
   const lessonId = typeof lessonIdValue === "string" ? lessonIdValue : "";
   const languageValue = formData.get("language");
@@ -101,7 +101,7 @@ export async function startLessonDictation(
   const { data: session, error: sessionError } = await supabase
     .from("dictation_sessions")
     .insert({
-      owner_id: user.id,
+      owner_id: userId,
       student_id: student.id,
       language,
       source_type: sourceType,
@@ -126,7 +126,7 @@ export async function startLessonDictation(
   }
 
   if (language === "zh" && isChineseVoice(voiceValue)) {
-    await supabase.from("profiles").update({ voice_zh: voiceValue }).eq("id", user.id);
+    await supabase.from("profiles").update({ voice_zh: voiceValue }).eq("id", userId);
   }
 
   redirect(language === "zh" ? `/chinese/dictation/${session.id}` : `/english/dictation/${session.id}`);
@@ -136,7 +136,7 @@ export async function startWordListDictation(
   _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const user = await requireUser();
+  const userId = await requireUserId();
   const listValue = formData.get("listId");
   const listId = typeof listValue === "string" ? listValue : "";
   const languageValue = formData.get("language");
@@ -170,7 +170,7 @@ export async function startWordListDictation(
   const { data: session, error: sessionError } = await supabase
     .from("dictation_sessions")
     .insert({
-      owner_id: user.id,
+      owner_id: userId,
       student_id: student.id,
       language,
       source_type: "word_list",
@@ -195,7 +195,7 @@ export async function startWordListDictation(
   }
 
   if (language === "zh" && isChineseVoice(voiceValue)) {
-    await supabase.from("profiles").update({ voice_zh: voiceValue }).eq("id", user.id);
+    await supabase.from("profiles").update({ voice_zh: voiceValue }).eq("id", userId);
   }
 
   redirect(language === "zh" ? `/chinese/dictation/${session.id}` : `/english/dictation/${session.id}`);
@@ -212,7 +212,7 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
     total: 0,
     accuracy: null,
   };
-  const user = await requireUser();
+  const userId = await requireUserId();
 
   if (!isUuid(sessionId) || !Number.isInteger(sentenceIndex) || sentenceIndex < 0 || studentAnswer.length > 4000) {
     return { ...empty, error: "未能核對這一句。" };
@@ -275,7 +275,7 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
   const { error: saveError } = await supabase.from("dictation_answers").upsert(
     {
       session_id: sessionId,
-      owner_id: user.id,
+      owner_id: userId,
       item_index: sentenceIndex,
       standard_answer: compared.standardAnswer,
       student_answer: compared.studentAnswer,
@@ -297,7 +297,7 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
 
   if (originId) {
     await recordMistake({
-      ownerId: user.id,
+      ownerId: userId,
       studentId: session.student_id,
       language: session.language,
       sourceId: originId,
@@ -341,7 +341,7 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
 }
 
 export async function startMistakeReview(_state: ActionState, formData: FormData): Promise<ActionState> {
-  const user = await requireUser();
+  const userId = await requireUserId();
   const languageValue = formData.get("language");
   const language: DictationLanguage | null = languageValue === "zh" || languageValue === "en" ? languageValue : null;
   const lessonValue = formData.get("lessonId");
@@ -387,12 +387,12 @@ export async function startMistakeReview(_state: ActionState, formData: FormData
     return { error: "沒有需要重溫的錯題。" };
   }
 
-  const { data: profile } = await supabase.from("profiles").select("voice_zh").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("voice_zh").eq("id", userId).maybeSingle();
   const voice = language === "zh" && profile?.voice_zh === "zh-CN" ? "zh-CN" : language === "zh" ? "zh-HK" : "en-GB";
   const { data: session, error: sessionError } = await supabase
     .from("dictation_sessions")
     .insert({
-      owner_id: user.id,
+      owner_id: userId,
       student_id: student.id,
       language,
       source_type: "mistakes",
@@ -419,7 +419,7 @@ export async function startMistakeReview(_state: ActionState, formData: FormData
 }
 
 export async function addPaperMistake(_state: ActionState, formData: FormData): Promise<ActionState> {
-  const user = await requireUser();
+  const userId = await requireUserId();
   const lessonValue = formData.get("lessonId");
   const lessonId = typeof lessonValue === "string" ? lessonValue : "";
   const standardValue = formData.get("standardAnswer");
@@ -456,7 +456,7 @@ export async function addPaperMistake(_state: ActionState, formData: FormData): 
   const studentAnswer = clauses.length === 1 && studentText.length > 0 ? studentText : "（紙上默書）";
   for (const clause of clauses) {
     const result = await recordMistake({
-      ownerId: user.id,
+      ownerId: userId,
       studentId: student.id,
       language: lesson.language,
       sourceId: lesson.id,

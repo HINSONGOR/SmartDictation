@@ -3,7 +3,7 @@ import { MistakeReviewForm } from "@/components/dictation/MistakeReviewForm";
 import { PaperMistakeForm } from "@/components/dictation/PaperMistakeForm";
 import { StrokeButton } from "@/components/dictation/StrokeModal";
 import { hanCharacters } from "@/lib/dictation/strokes";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isMissingSchema } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,7 +22,7 @@ function formatWrongAt(value: string): string {
 }
 
 export default async function MistakesPage({ searchParams }: MistakesPageProps) {
-  await requireUser();
+  await requireUserId();
   const params = await searchParams;
   const languageParam = firstParam(params.language);
   const language = languageParam === "en" ? "en" : languageParam === "zh" ? "zh" : null;

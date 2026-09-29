@@ -2,13 +2,13 @@ import Link from "next/link";
 import { primaryButtonClass } from "@/components/auth/button-styles";
 import { ConfirmDelete } from "@/components/content/confirm-delete";
 import { MigrationNotice, PageShell } from "@/components/content/page-shell";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { listLessons } from "@/lib/content/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function LessonListPage() {
-  await requireUser();
+  await requireUserId();
   const result = await listLessons("zh");
 
   return (

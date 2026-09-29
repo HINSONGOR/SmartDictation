@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { UpdatePasswordForm } from "@/components/auth/update-password-form";
 import { updatePasswordError } from "@/lib/auth/messages";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function UpdatePasswordPage({ searchParams }: UpdatePasswor
     redirect("/login");
   }
 
-  await requireUser();
+  await requireUserId();
   const params = await searchParams;
 
   return (

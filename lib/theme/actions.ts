@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { isChineseVoice } from "@/lib/dictation/options";
 import { isTheme, type ThemeName } from "@/lib/theme/themes";
 
 export async function saveTheme(theme: ThemeName): Promise<{ error?: string }> {
@@ -25,4 +26,18 @@ export async function saveTheme(theme: ThemeName): Promise<{ error?: string }> {
   }
 
   return {};
+}
+
+export async function saveVoiceZh(voice: string): Promise<void> {
+  if (!isChineseVoice(voice) || !getSupabasePublicEnv()) {
+    return;
+  }
+
+  const supabase = await createClient();
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError || !data.user) {
+    return;
+  }
+
+  await supabase.from("profiles").update({ voice_zh: voice }).eq("id", data.user.id);
 }

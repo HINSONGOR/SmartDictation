@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
+import { USER_HEADER } from "@/lib/auth/user-header";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 const PUBLIC_PATHS = new Set(["/login", "/register", "/forgot-password"]);
@@ -83,5 +84,11 @@ export async function updateSession(request: NextRequest) {
     return copySession(supabaseResponse, NextResponse.redirect(url));
   }
 
-  return supabaseResponse;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete(USER_HEADER);
+  if (user) {
+    requestHeaders.set(USER_HEADER, user.id);
+  }
+
+  return copySession(supabaseResponse, NextResponse.next({ request: { headers: requestHeaders } }));
 }

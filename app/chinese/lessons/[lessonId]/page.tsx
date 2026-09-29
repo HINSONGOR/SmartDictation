@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { primaryButtonClass } from "@/components/auth/button-styles";
 import { MigrationNotice, PageShell } from "@/components/content/page-shell";
 import { LessonEditor } from "@/components/lessons/lesson-editor";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { getLesson } from "@/lib/content/queries";
 import { isUuid } from "@/lib/content/parse";
 
@@ -15,7 +15,7 @@ type LessonPageProps = {
 };
 
 export default async function LessonPage({ params, searchParams }: LessonPageProps) {
-  await requireUser();
+  await requireUserId();
   const { lessonId } = await params;
   const query = await searchParams;
 

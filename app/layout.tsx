@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { ThemePicker } from "@/components/theme/ThemePicker";
-import { loadSavedTheme } from "@/lib/theme/load";
+import Link from "next/link";
 import { themeBootScript } from "@/lib/theme/themes";
 import "./globals.css";
 
@@ -15,23 +14,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const savedTheme = await loadSavedTheme();
-
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="zh-HK"
-      data-theme={savedTheme.theme}
-      data-theme-saved={savedTheme.saved ? "true" : "false"}
-      className="h-full"
-      suppressHydrationWarning
-    >
+    <html lang="zh-HK" data-theme="default" data-theme-saved="false" className="h-full" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
-        <div className="mx-auto w-full max-w-3xl px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <ThemePicker initialTheme={savedTheme.theme} saved={savedTheme.saved} />
+        <div className="mx-auto flex w-full max-w-3xl justify-end px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <Link
+            href="/settings"
+            className="inline-flex min-h-12 items-center rounded-xl border border-border bg-card px-4 text-base font-medium text-foreground"
+          >
+            設定
+          </Link>
         </div>
         {children}
       </body>

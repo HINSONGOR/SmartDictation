@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/content/page-shell";
 import { DictationSetup } from "@/components/dictation/DictationSetup";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isUuid } from "@/lib/content/parse";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,7 @@ type SelectPageProps = {
 };
 
 export default async function SelectEnglishLessonPage({ params }: SelectPageProps) {
-  await requireUser();
+  await requireUserId();
   const { lessonId } = await params;
 
   if (!isUuid(lessonId)) {
@@ -40,7 +40,7 @@ export default async function SelectEnglishLessonPage({ params }: SelectPageProp
   return (
     <PageShell
       title={lesson.title}
-      description="學生不需要由第一段開始。選好範圍後才播放。"
+      description="選這次要默的段落。語音和速度用設定頁記住的選擇。"
       backHref={`/english/lessons/${lesson.id}`}
       backLabel="返回課文"
     >
@@ -48,7 +48,6 @@ export default async function SelectEnglishLessonPage({ params }: SelectPageProp
         lessonId={lesson.id}
         language="en"
         sortOrders={(paragraphs ?? []).map((paragraph) => paragraph.sort_order)}
-        savedVoice="en-GB"
       />
     </PageShell>
   );

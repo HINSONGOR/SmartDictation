@@ -12,7 +12,7 @@ import {
   wordListKind,
   wordsToJson,
 } from "@/lib/content/parse";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isMissingSchema } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,7 +38,7 @@ function formError(
 }
 
 export async function saveLessonAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
+  await requireUserId();
 
   const title = parseTitle(formData.get("title"));
   const paragraphs = parseParagraphs(formData.get("paragraphs"));
@@ -93,7 +93,7 @@ export async function saveLessonAction(_state: ActionState, formData: FormData):
 }
 
 export async function deleteLessonAction(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireUserId();
   const idValue = formData.get("id");
   const languageValue = formData.get("language");
   const id = typeof idValue === "string" ? idValue : "";
@@ -118,7 +118,7 @@ function listPath(language: ContentLanguage): string {
 }
 
 export async function saveWordListAction(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
+  await requireUserId();
 
   const languageValue = formData.get("language");
   if (languageValue !== "zh" && languageValue !== "en") {
@@ -173,7 +173,7 @@ export async function saveWordListAction(_state: ActionState, formData: FormData
 }
 
 export async function deleteWordListAction(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireUserId();
   const idValue = formData.get("id");
   const languageValue = formData.get("language");
   const id = typeof idValue === "string" ? idValue : "";

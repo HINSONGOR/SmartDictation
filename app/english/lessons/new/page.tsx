@@ -1,11 +1,11 @@
 import { PageShell } from "@/components/content/page-shell";
 import { LessonEditor } from "@/components/lessons/lesson-editor";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewEnglishLessonPage() {
-  await requireUser();
+  await requireUserId();
 
   return (
     <PageShell

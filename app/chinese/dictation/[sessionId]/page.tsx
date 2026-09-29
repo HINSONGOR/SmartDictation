@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { DictationSession } from "@/components/dictation/DictationSession";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isUuid } from "@/lib/content/parse";
 import { loadListenSession } from "@/lib/dictation/load-session";
 
@@ -11,7 +11,7 @@ type DictationPageProps = {
 };
 
 export default async function ChineseDictationPage({ params }: DictationPageProps) {
-  await requireUser();
+  await requireUserId();
   const { sessionId } = await params;
 
   if (!isUuid(sessionId)) {

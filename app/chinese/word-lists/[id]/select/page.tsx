@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/content/page-shell";
 import { WordDictationSetup } from "@/components/dictation/WordDictationSetup";
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { isUuid } from "@/lib/content/parse";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,7 @@ type SelectPageProps = {
 };
 
 export default async function SelectChineseWordListPage({ params }: SelectPageProps) {
-  const user = await requireUser();
+  const userId = await requireUserId();
   const { id } = await params;
 
   if (!isUuid(id)) {
@@ -23,7 +23,7 @@ export default async function SelectChineseWordListPage({ params }: SelectPagePr
   const [{ data: list }, { count }, { data: profile }] = await Promise.all([
     supabase.from("word_lists").select("id, title").eq("id", id).eq("language", "zh").maybeSingle(),
     supabase.from("dictation_items").select("id", { count: "exact", head: true }).eq("word_list_id", id),
-    supabase.from("profiles").select("voice_zh").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("voice_zh").eq("id", userId).maybeSingle(),
   ]);
 
   if (!list) {
