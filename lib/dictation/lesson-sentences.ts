@@ -34,3 +34,12 @@ export function buildLessonSentences(
 
   return sentences;
 }
+
+export function buildWordItems(texts: readonly string[], language: DictationLanguage): string[] {
+  const split = language === "en" ? segmentEnglishSentences : segmentSentences;
+  const items: string[] = [];
+  for (const text of texts) {
+    items.push(...split(text));
+  }
+  return items;
+}

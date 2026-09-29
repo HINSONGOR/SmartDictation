@@ -19,6 +19,7 @@ type DictationPlayerProps = {
   initialSpeed: DictationSpeed;
   voices: readonly DictationVoice[];
   cues: { paragraphSortOrder: number | null }[];
+  itemUnit?: "句" | "個";
   selectHref: string;
 };
 
@@ -39,6 +40,7 @@ export function DictationPlayer({
   initialSpeed,
   voices,
   cues,
+  itemUnit = "句",
   selectHref,
 }: DictationPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -171,7 +173,7 @@ export function DictationPlayer({
         <p className="text-base text-muted">{title}</p>
         <p className="mt-1 text-base text-muted">{rangeLabel}</p>
         <div className="mt-4">
-          <SentenceProgress index={index} total={cues.length} paragraphSortOrder={current.paragraphSortOrder} />
+          <SentenceProgress index={index} total={cues.length} paragraphSortOrder={current.paragraphSortOrder} unit={itemUnit} />
         </div>
         <p className="mt-4 text-base text-foreground">
           {phase === "loading" ? "正在準備語音" : phase === "playing" ? "正在播放" : phase === "ended" ? "播放完成" : "準備播放"}

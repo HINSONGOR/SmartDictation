@@ -12,6 +12,7 @@ type MistakeWrite = {
   studentId: string;
   language: DictationLanguage;
   sourceId: string;
+  sourceType?: "lesson" | "word_list";
   standardAnswer: string;
   studentAnswer: string;
   correct: boolean;
@@ -49,7 +50,7 @@ export async function recordMistake(input: MistakeWrite): Promise<"saved" | "mis
       owner_id: input.ownerId,
       student_id: input.studentId,
       language: input.language,
-      source_type: "lesson",
+      source_type: input.sourceType ?? "lesson",
       source_id: input.sourceId,
       answer_key: answerKey,
       standard_answer: input.standardAnswer,

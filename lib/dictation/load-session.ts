@@ -1,6 +1,6 @@
 import { paragraphLabel } from "@/lib/content/parse";
 import { compareAnswers } from "@/lib/dictation/compare";
-import { buildLessonSentences } from "@/lib/dictation/lesson-sentences";
+import { buildLessonSentences, buildWordItems } from "@/lib/dictation/lesson-sentences";
 import {
   defaultVoice,
   isDictationSpeed,
@@ -33,6 +33,8 @@ export type ListenSession = {
   voice: DictationVoice;
   speed: DictationSpeed;
   cues: ListenCue[];
+  itemUnit: "句" | "個";
+  backLabel: string;
   selectHref: string;
   answersReady: boolean;
   savedAnswers: SavedTypingAnswer[];
@@ -66,7 +68,42 @@ export async function loadListenSession(sessionId: string, language: DictationLa
       voice: isVoiceForLanguage(session.voice, language) ? session.voice : defaultVoice(language),
       speed: isDictationSpeed(session.speed) ? session.speed : "1",
       cues: mistakes.map(() => ({ paragraphSortOrder: null })),
+      itemUnit: "句",
+      backLabel: "返回錯題",
       selectHref: `/mistakes?language=${language}`,
+      answersReady: saved.ready,
+      savedAnswers: saved.answers,
+    };
+  }
+
+  if (session.source_type === "word_list") {
+    const words = await loadWordItemTexts(session.source_id, language);
+    if (!words) {
+      return null;
+    }
+    const { data: list } = await supabase
+      .from("word_lists")
+      .select("title")
+      .eq("id", session.source_id)
+      .eq("language", language)
+      .maybeSingle();
+    if (!list) {
+      return null;
+    }
+    const section = language === "zh" ? "chinese" : "english";
+    const saved = session.mode === "typing" ? await loadSavedAnswers(session.id) : { ready: true, answers: [] };
+    return {
+      id: session.id,
+      title: list.title,
+      rangeLabel: language === "zh" ? "詞語" : "Vocabulary",
+      language,
+      mode: session.mode,
+      voice: isVoiceForLanguage(session.voice, language) ? session.voice : defaultVoice(language),
+      speed: isDictationSpeed(session.speed) ? session.speed : "1",
+      cues: words.map(() => ({ paragraphSortOrder: null })),
+      itemUnit: "個",
+      backLabel: language === "zh" ? "返回詞語表" : "返回生字表",
+      selectHref: `/${section}/word-lists/${session.source_id}/select`,
       answersReady: saved.ready,
       savedAnswers: saved.answers,
     };
@@ -117,6 +154,8 @@ export async function loadListenSession(sessionId: string, language: DictationLa
     voice: isVoiceForLanguage(session.voice, language) ? session.voice : defaultVoice(language),
     speed: isDictationSpeed(session.speed) ? session.speed : "1",
     cues: sentences.map((sentence) => ({ paragraphSortOrder: sentence.paragraphSortOrder })),
+    itemUnit: "句",
+    backLabel: "返回段落選擇",
     selectHref: `/${section}/lessons/${lesson.id}/select`,
     answersReady: saved.ready,
     savedAnswers: saved.answers,
@@ -204,12 +243,21 @@ export async function loadListenSentence(
     !session ||
     (session.language !== "zh" && session.language !== "en") ||
     (session.mode !== "listen" && session.mode !== "typing") ||
-    (session.source_type !== "lesson" && session.source_type !== "paragraph" && session.source_type !== "mistakes")
+    (session.source_type !== "lesson" &&
+      session.source_type !== "paragraph" &&
+      session.source_type !== "word_list" &&
+      session.source_type !== "mistakes")
   ) {
     return null;
   }
 
   const language = session.language;
+
+  if (session.source_type === "word_list") {
+    const words = await loadWordItemTexts(session.source_id, language);
+    const text = words?.[sentenceIndex];
+    return text ? { text, language } : null;
+  }
 
   if (session.source_type === "mistakes") {
     const mistakes = await loadMistakeSentences(sessionId);
@@ -238,4 +286,34 @@ export async function loadListenSentence(
   const text = sentences[sentenceIndex]?.text;
 
   return text ? { text, language } : null;
+}
+
+export async function loadWordItemTexts(listId: string, language: DictationLanguage): Promise<string[] | null> {
+  const supabase = await createClient();
+  const { data: list } = await supabase
+    .from("word_lists")
+    .select("id")
+    .eq("id", listId)
+    .eq("language", language)
+    .maybeSingle();
+
+  if (!list) {
+    return null;
+  }
+
+  const { data: items } = await supabase
+    .from("dictation_items")
+    .select("text")
+    .eq("word_list_id", listId)
+    .order("sort_order", { ascending: true });
+
+  if (!items) {
+    return null;
+  }
+
+  const words = buildWordItems(
+    items.map((item) => item.text),
+    language,
+  );
+  return words.length > 0 ? words : null;
 }

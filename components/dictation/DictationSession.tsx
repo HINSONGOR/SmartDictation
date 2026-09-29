@@ -9,9 +9,9 @@ export function DictationSession({ session, title }: { session: ListenSession; t
     return (
       <PageShell
         title={title}
-        description="聽完後輸入這一句，標點也要打。對答案後才顯示原文。"
+        description={session.itemUnit === "個" ? "聽完後輸入這個詞語。對答案後才顯示原文。" : "聽完後輸入這一句，標點也要打。對答案後才顯示原文。"}
         backHref={session.selectHref}
-        backLabel="返回段落選擇"
+        backLabel={session.backLabel}
       >
         <TypingPlayer
           sessionId={session.id}
@@ -21,6 +21,7 @@ export function DictationSession({ session, title }: { session: ListenSession; t
           initialSpeed={session.speed}
           voices={voicesForLanguage(session.language)}
           cues={session.cues}
+          itemUnit={session.itemUnit}
           selectHref={session.selectHref}
           answersReady={session.answersReady}
           savedAnswers={session.savedAnswers}
@@ -30,7 +31,12 @@ export function DictationSession({ session, title }: { session: ListenSession; t
   }
 
   return (
-    <PageShell title={title} description="每句播完會停下，不會自動播下一句。" backHref={session.selectHref} backLabel="返回段落選擇">
+    <PageShell
+      title={title}
+      description={session.itemUnit === "個" ? "每個詞語播完會停下，不會自動播下一個。" : "每句播完會停下，不會自動播下一句。"}
+      backHref={session.selectHref}
+      backLabel={session.backLabel}
+    >
       <DictationPlayer
         sessionId={session.id}
         title={session.title}
@@ -39,6 +45,7 @@ export function DictationSession({ session, title }: { session: ListenSession; t
         initialSpeed={session.speed}
         voices={voicesForLanguage(session.language)}
         cues={session.cues}
+        itemUnit={session.itemUnit}
         selectHref={session.selectHref}
       />
     </PageShell>

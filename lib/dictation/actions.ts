@@ -5,7 +5,7 @@ import type { ActionState } from "@/lib/content/action-state";
 import { isUuid } from "@/lib/content/parse";
 import { compareAnswers } from "@/lib/dictation/compare";
 import { buildLessonSentences } from "@/lib/dictation/lesson-sentences";
-import { loadMistakeSentences } from "@/lib/dictation/load-session";
+import { loadMistakeSentences, loadWordItemTexts } from "@/lib/dictation/load-session";
 import { recordMistake } from "@/lib/dictation/mistakes";
 import { segmentEnglishSentences, segmentSentences } from "@/lib/dictation/segment";
 import { isChineseVoice, isDictationSpeed, isVoiceForLanguage, type DictationLanguage } from "@/lib/dictation/options";
@@ -132,6 +132,75 @@ export async function startLessonDictation(
   redirect(language === "zh" ? `/chinese/dictation/${session.id}` : `/english/dictation/${session.id}`);
 }
 
+export async function startWordListDictation(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser();
+  const listValue = formData.get("listId");
+  const listId = typeof listValue === "string" ? listValue : "";
+  const languageValue = formData.get("language");
+  const language: DictationLanguage | null = languageValue === "zh" || languageValue === "en" ? languageValue : null;
+  const voiceValue = formData.get("voice");
+  const speedValue = formData.get("speed");
+  const modeValue = formData.get("mode");
+  const mode = modeValue === "listen" || modeValue === "typing" ? modeValue : null;
+
+  if (!language || !mode || !isUuid(listId) || !isVoiceForLanguage(voiceValue, language) || !isDictationSpeed(speedValue)) {
+    return { error: "請選擇方式、語音和速度。" };
+  }
+
+  const words = await loadWordItemTexts(listId, language);
+  if (!words) {
+    return { error: language === "zh" ? "這份詞語表還沒有詞語。" : "這份生字表還沒有生字。" };
+  }
+
+  const supabase = await createClient();
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!student) {
+    return { error: studentError ? "學生資料暫時讀取不到。" : "尚未有學生資料。" };
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("dictation_sessions")
+    .insert({
+      owner_id: user.id,
+      student_id: student.id,
+      language,
+      source_type: "word_list",
+      source_id: listId,
+      paragraph_index: null,
+      mode,
+      voice: voiceValue,
+      speed: speedValue,
+      completed: false,
+    })
+    .select("id")
+    .single();
+
+  if (isMissingSchema(sessionError?.code)) {
+    return {
+      error: `默書記錄尚未建立。請在 Supabase SQL Editor 貼上並執行 ${SESSION_MIGRATION} 的內容。`,
+    };
+  }
+
+  if (sessionError || !session) {
+    return { error: "未能開始默書，請再試一次。" };
+  }
+
+  if (language === "zh" && isChineseVoice(voiceValue)) {
+    await supabase.from("profiles").update({ voice_zh: voiceValue }).eq("id", user.id);
+  }
+
+  redirect(language === "zh" ? `/chinese/dictation/${session.id}` : `/english/dictation/${session.id}`);
+}
+
 export async function submitTypingAnswer(sessionId: string, sentenceIndex: number, studentAnswer: string): Promise<TypingCheckResult> {
   const empty: TypingCheckResult = {
     correct: false,
@@ -160,14 +229,18 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
     !session ||
     session.mode !== "typing" ||
     (session.language !== "zh" && session.language !== "en") ||
-    (session.source_type !== "lesson" && session.source_type !== "paragraph" && session.source_type !== "mistakes")
+    (session.source_type !== "lesson" &&
+      session.source_type !== "paragraph" &&
+      session.source_type !== "word_list" &&
+      session.source_type !== "mistakes")
   ) {
     return { ...empty, error: "找不到這次打字默書。" };
   }
 
   const mistakeItems = session.source_type === "mistakes" ? await loadMistakeSentences(sessionId) : null;
+  const wordItems = session.source_type === "word_list" ? await loadWordItemTexts(session.source_id, session.language) : null;
   const lessonSentences =
-    session.source_type === "mistakes"
+    session.source_type === "mistakes" || session.source_type === "word_list"
       ? []
       : buildLessonSentences(
           (
@@ -185,9 +258,15 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
           session.paragraph_index,
           session.language,
         );
-  const standard = mistakeItems ? mistakeItems[sentenceIndex]?.text : lessonSentences[sentenceIndex]?.text;
-  const originLessonId = mistakeItems ? mistakeItems[sentenceIndex]?.lessonId : session.source_id;
-  const sentences = mistakeItems ?? lessonSentences.map((sentence) => ({ text: sentence.text }));
+  const standard = mistakeItems
+    ? mistakeItems[sentenceIndex]?.text
+    : wordItems
+      ? wordItems[sentenceIndex]
+      : lessonSentences[sentenceIndex]?.text;
+  const originId = mistakeItems ? mistakeItems[sentenceIndex]?.lessonId : session.source_id;
+  const sentences = mistakeItems ?? (wordItems ?? lessonSentences).map((sentence) =>
+    typeof sentence === "string" ? { text: sentence } : { text: sentence.text },
+  );
   if (!standard) {
     return { ...empty, error: "找不到這一句。" };
   }
@@ -216,12 +295,13 @@ export async function submitTypingAnswer(sessionId: string, sentenceIndex: numbe
     return { ...empty, error: "答案未能儲存，請再試一次。" };
   }
 
-  if (originLessonId) {
+  if (originId) {
     await recordMistake({
       ownerId: user.id,
       studentId: session.student_id,
       language: session.language,
-      sourceId: originLessonId,
+      sourceId: originId,
+      sourceType: session.source_type === "word_list" ? "word_list" : "lesson",
       standardAnswer: compared.standardAnswer,
       studentAnswer: compared.studentAnswer,
       correct: compared.correct,

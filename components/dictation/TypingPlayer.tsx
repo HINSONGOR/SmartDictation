@@ -22,6 +22,7 @@ type TypingPlayerProps = {
   initialSpeed: DictationSpeed;
   voices: readonly DictationVoice[];
   cues: { paragraphSortOrder: number | null }[];
+  itemUnit?: "句" | "個";
   selectHref: string;
   answersReady: boolean;
   savedAnswers: SavedTypingAnswer[];
@@ -61,6 +62,7 @@ export function TypingPlayer({
   initialSpeed,
   voices,
   cues,
+  itemUnit = "句",
   selectHref,
   answersReady,
   savedAnswers,
@@ -225,7 +227,7 @@ export function TypingPlayer({
         <p className="text-base text-muted">{title}</p>
         <p className="mt-1 text-base text-muted">{rangeLabel}</p>
         <div className="mt-4">
-          <SentenceProgress index={index} total={cues.length} paragraphSortOrder={current.paragraphSortOrder} />
+          <SentenceProgress index={index} total={cues.length} paragraphSortOrder={current.paragraphSortOrder} unit={itemUnit} />
         </div>
       </div>
 

@@ -30,8 +30,14 @@ export default async function ChineseWordListsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href={`/chinese/word-lists/${list.id}/edit`}
+                  href={`/chinese/word-lists/${list.id}/select`}
                   className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-base font-medium text-primary-foreground"
+                >
+                  開始默書
+                </Link>
+                <Link
+                  href={`/chinese/word-lists/${list.id}/edit`}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-border bg-secondary px-4 text-base font-medium text-foreground"
                 >
                   編輯
                 </Link>
