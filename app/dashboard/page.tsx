@@ -9,11 +9,21 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{ password?: string | string[] }>;
+};
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   if (!getSupabasePublicEnv()) {
     redirect("/login");
   }
 
+  const params = await searchParams;
+  const passwordSaved = firstParam(params.password) === "saved";
   const user = await requireUser();
   const supabase = await createClient();
 
@@ -47,6 +57,11 @@ export default async function DashboardPage() {
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">主頁</h1>
       <p className="mt-3 text-base leading-7 text-muted">你好，{displayName}</p>
       {user.email ? <p className="text-base text-muted">{user.email}</p> : null}
+      {passwordSaved ? (
+        <p className="mt-4 rounded-2xl border border-border bg-card p-5 text-base leading-7 text-foreground">
+          密碼已儲存。手機請用上面這個電郵，同剛設定的密碼登入。
+        </p>
+      ) : null}
       {students && students.length > 0 ? (
         <p className="text-base text-muted">學生：{students.map((student) => student.name).join("、")}</p>
       ) : null}

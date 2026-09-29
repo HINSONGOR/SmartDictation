@@ -36,5 +36,29 @@ export function callbackErrorMessage(code: string | undefined): string | null {
     return "登入未完成，請再試一次。";
   }
 
+  if (code === "credentials") {
+    return "電郵或密碼不正確。";
+  }
+
+  if (code === "confirm") {
+    return "請先到電郵確認帳號，然後再登入。";
+  }
+
+  return null;
+}
+
+export function updatePasswordError(code: string | undefined): string | null {
+  if (code === "short") {
+    return "密碼請使用至少 8 個字元。";
+  }
+
+  if (code === "mismatch") {
+    return "兩次輸入的密碼不相同。";
+  }
+
+  if (code === "failed") {
+    return "密碼未儲存，請再試一次。";
+  }
+
   return null;
 }

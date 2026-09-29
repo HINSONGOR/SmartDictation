@@ -1,49 +1,34 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { AuthField } from "@/components/auth/auth-field";
 import { primaryButtonClass } from "@/components/auth/button-styles";
 import { GoogleButton } from "@/components/auth/google-button";
-import { authErrorMessage } from "@/lib/auth/messages";
-import { createClient } from "@/lib/supabase/client";
+import { loginWithPassword } from "@/lib/auth/password-actions";
+import { useState } from "react";
 
 type LoginFormProps = {
   initialError: string | null;
 };
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" className={primaryButtonClass} disabled={pending}>
+      {pending ? "登入中…" : "登入"}
+    </button>
+  );
+}
+
 export function LoginForm({ initialError }: LoginFormProps) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(initialError);
-  const [pending, setPending] = useState(false);
-
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setError(null);
-
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
-    if (signInError) {
-      setPending(false);
-      setError(authErrorMessage(signInError.message));
-      return;
-    }
-
-    router.replace("/dashboard");
-    router.refresh();
-  }
 
   return (
     <div className="grid gap-6">
-      <form className="grid gap-4" onSubmit={onSubmit}>
+      <form className="grid gap-4" action={loginWithPassword}>
         <AuthField
           id="email"
           label="電郵"
@@ -60,14 +45,12 @@ export function LoginForm({ initialError }: LoginFormProps) {
           value={password}
           onChange={setPassword}
         />
-        {error ? (
+        {initialError ? (
           <p role="alert" className="text-base text-error">
-            {error}
+            {initialError}
           </p>
         ) : null}
-        <button type="submit" className={primaryButtonClass} disabled={pending}>
-          {pending ? "登入中…" : "登入"}
-        </button>
+        <SubmitButton />
       </form>
       <GoogleButton />
       <div className="grid gap-2 text-base">

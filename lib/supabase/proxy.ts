@@ -59,6 +59,16 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  if (
+    request.method === "GET" &&
+    pathname === "/login" &&
+    request.nextUrl.searchParams.has("password")
+  ) {
+    const url = request.nextUrl.clone();
+    url.search = "";
+    return copySession(supabaseResponse, NextResponse.redirect(url));
+  }
+
   if (!user && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

@@ -107,12 +107,17 @@ async function synthesize(
       voiceName,
       speakingRate,
     });
-    await writeCachedAudio(cacheKey, audio);
+    try {
+      await writeCachedAudio(cacheKey, audio);
+    } catch (cacheError) {
+      const cacheMessage = cacheError instanceof Error ? cacheError.message : "";
+      console.error("TTS cache write failed", cacheMessage);
+    }
     return audio;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message === "missing-tts-key") {
-      return errorResponse("尚未設定語音服務。請在伺服器的 .env.local 加入 GOOGLE_CLOUD_TTS_API_KEY。", 503);
+      return errorResponse("尚未設定語音服務。", 503);
     }
 
     if (message === "tts-provider-403" || message === "tts-provider-401") {

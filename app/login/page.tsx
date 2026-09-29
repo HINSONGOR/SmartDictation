@@ -19,7 +19,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const initialError = callbackErrorMessage(firstParam(params.error));
 
   return (
-    <AuthShell title="登入" description="登入後才可以查看私人學習資料。">
+    <AuthShell
+      title="登入"
+      description="用電郵和密碼登入，或使用 Google 登入。"
+    >
       {getSupabasePublicEnv() ? <LoginForm initialError={initialError} /> : <MissingConfig />}
     </AuthShell>
   );

@@ -60,16 +60,16 @@ export function RegisterForm() {
     setPending(false);
     const identities = data.user?.identities ?? [];
     if (data.user && identities.length === 0) {
-      setError("這個電郵已經註冊。請在電腦用「忘記密碼」設定密碼，然後在手機用電郵登入。");
+      setError("這個電郵已經註冊。請用「忘記密碼」設定密碼，然後用電郵登入。");
       return;
     }
 
-    setMessage("帳號已建立。請在電腦打開確認電郵。連結會去 localhost，手機打不開。確認後，再用電郵和密碼登入。");
+    setMessage("帳號已建立。請打開確認電郵，按裡面的連結。確認後，再用電郵和密碼登入。");
   }
 
   return (
     <div className="grid gap-6">
-      <form className="grid gap-4" onSubmit={onSubmit}>
+      <form className="grid gap-4" method="post" onSubmit={onSubmit}>
         <AuthField
           id="display-name"
           label="顯示名稱"

@@ -1,49 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { AuthField } from "@/components/auth/auth-field";
 import { primaryButtonClass } from "@/components/auth/button-styles";
-import { authErrorMessage } from "@/lib/auth/messages";
-import { createClient } from "@/lib/supabase/client";
+import { updatePassword } from "@/lib/auth/password-actions";
 
-export function UpdatePasswordForm() {
-  const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+type UpdatePasswordFormProps = {
+  initialError: string | null;
+};
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    if (password.length < 8) {
-      setError("密碼請使用至少 8 個字元。");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("兩次輸入的密碼不相同。");
-      return;
-    }
-
-    setPending(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-
-    if (updateError) {
-      setPending(false);
-      setError(authErrorMessage(updateError.message));
-      return;
-    }
-
-    router.replace("/dashboard");
-    router.refresh();
-  }
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
   return (
-    <form className="grid gap-4" onSubmit={onSubmit}>
+    <button type="submit" className={primaryButtonClass} disabled={pending}>
+      {pending ? "更新中…" : "更新密碼"}
+    </button>
+  );
+}
+
+export function UpdatePasswordForm({ initialError }: UpdatePasswordFormProps) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  return (
+    <form className="grid gap-4" action={updatePassword}>
       <AuthField
         id="password"
         label="新密碼"
@@ -60,14 +42,12 @@ export function UpdatePasswordForm() {
         value={confirmPassword}
         onChange={setConfirmPassword}
       />
-      {error ? (
+      {initialError ? (
         <p role="alert" className="text-base text-error">
-          {error}
+          {initialError}
         </p>
       ) : null}
-      <button type="submit" className={primaryButtonClass} disabled={pending}>
-        {pending ? "更新中…" : "更新密碼"}
-      </button>
+      <SubmitButton />
     </form>
   );
 }

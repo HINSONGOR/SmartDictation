@@ -41,7 +41,7 @@ export function ForgotPasswordForm() {
           如果這個電郵已註冊，你會收到重設密碼信。請開啟信件裡的連結。
         </p>
       ) : (
-        <form className="grid gap-4" onSubmit={onSubmit}>
+        <form className="grid gap-4" method="post" onSubmit={onSubmit}>
           <AuthField
             id="email"
             label="電郵"
