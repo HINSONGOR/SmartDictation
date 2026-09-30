@@ -17,6 +17,7 @@ export function DictationSession({ session, title }: { session: ListenSession; t
           sessionId={session.id}
           title={session.title}
           rangeLabel={session.rangeLabel}
+          language={session.language}
           initialVoice={session.voice}
           initialSpeed={session.speed}
           voices={voicesForLanguage(session.language)}
@@ -33,7 +34,13 @@ export function DictationSession({ session, title }: { session: ListenSession; t
   return (
     <PageShell
       title={title}
-      description={session.itemUnit === "個" ? "每個詞語播完會停下，不會自動播下一個。" : "每句播完會停下，不會自動播下一句。"}
+      description={
+        session.itemUnit === "個"
+          ? "每個詞語播完會停下。最後一個播完會顯示答案。"
+          : session.language === "zh"
+            ? "每句播完會停下。最後一句播完會顯示答案和筆劃。"
+            : "每句播完會停下。最後一句播完會顯示答案。"
+      }
       backHref={session.selectHref}
       backLabel={session.backLabel}
     >
@@ -41,6 +48,7 @@ export function DictationSession({ session, title }: { session: ListenSession; t
         sessionId={session.id}
         title={session.title}
         rangeLabel={session.rangeLabel}
+        language={session.language}
         initialVoice={session.voice}
         initialSpeed={session.speed}
         voices={voicesForLanguage(session.language)}

@@ -228,10 +228,9 @@ export async function loadMistakeSentences(
   return sentences.length > 0 ? sentences : null;
 }
 
-export async function loadListenSentence(
+export async function loadOwnedSessionItems(
   sessionId: string,
-  sentenceIndex: number,
-): Promise<{ text: string; language: DictationLanguage } | null> {
+): Promise<{ texts: string[]; language: DictationLanguage; mode: "listen" | "typing" } | null> {
   const supabase = await createClient();
   const { data: session } = await supabase
     .from("dictation_sessions")
@@ -255,14 +254,12 @@ export async function loadListenSentence(
 
   if (session.source_type === "word_list") {
     const words = await loadWordItemTexts(session.source_id, language);
-    const text = words?.[sentenceIndex];
-    return text ? { text, language } : null;
+    return words ? { texts: words, language, mode: session.mode } : null;
   }
 
   if (session.source_type === "mistakes") {
     const mistakes = await loadMistakeSentences(sessionId);
-    const text = mistakes?.[sentenceIndex]?.text;
-    return text ? { text, language } : null;
+    return mistakes ? { texts: mistakes.map((item) => item.text), language, mode: session.mode } : null;
   }
 
   const { data: paragraphs } = await supabase
@@ -283,9 +280,17 @@ export async function loadListenSentence(
     session.paragraph_index,
     language,
   );
-  const text = sentences[sentenceIndex]?.text;
 
-  return text ? { text, language } : null;
+  return sentences.length > 0 ? { texts: sentences.map((sentence) => sentence.text), language, mode: session.mode } : null;
+}
+
+export async function loadListenSentence(
+  sessionId: string,
+  sentenceIndex: number,
+): Promise<{ text: string; language: DictationLanguage } | null> {
+  const items = await loadOwnedSessionItems(sessionId);
+  const text = items?.texts[sentenceIndex];
+  return items && text ? { text, language: items.language } : null;
 }
 
 export async function loadWordItemTexts(listId: string, language: DictationLanguage): Promise<string[] | null> {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/auth/button-styles";
+import { AnswerSheet } from "@/components/dictation/AnswerSheet";
 import { SentenceProgress } from "@/components/dictation/SentenceProgress";
 import { SpeedSelector } from "@/components/dictation/SpeedSelector";
 import { VoiceSelector } from "@/components/dictation/VoiceSelector";
@@ -10,7 +11,7 @@ import { StrokeButton } from "@/components/dictation/StrokeModal";
 import { submitTypingAnswer, type TypingCheckResult } from "@/lib/dictation/actions";
 import { wrongHanCharacters } from "@/lib/dictation/strokes";
 import type { SavedTypingAnswer } from "@/lib/dictation/load-session";
-import type { DictationSpeed, DictationVoice } from "@/lib/dictation/options";
+import type { DictationLanguage, DictationSpeed, DictationVoice } from "@/lib/dictation/options";
 
 type Phase = "idle" | "loading" | "playing" | "paused" | "ended";
 
@@ -18,6 +19,7 @@ type TypingPlayerProps = {
   sessionId: string;
   title: string;
   rangeLabel: string;
+  language: DictationLanguage;
   initialVoice: DictationVoice;
   initialSpeed: DictationSpeed;
   voices: readonly DictationVoice[];
@@ -58,6 +60,7 @@ export function TypingPlayer({
   sessionId,
   title,
   rangeLabel,
+  language,
   initialVoice,
   initialSpeed,
   voices,
@@ -286,6 +289,14 @@ export function TypingPlayer({
         <p className="text-center text-xl font-semibold text-foreground">
           正確 {summary.correctCount} / {summary.total}，準確率 {summary.accuracy ?? 0}%
         </p>
+      ) : null}
+      {finished ? (
+        <AnswerSheet
+          texts={cues.map((_, itemIndex) => answers.get(itemIndex)?.standardAnswer ?? "")}
+          itemUnit={itemUnit}
+          language={language}
+          paragraphSortOrders={cues.map((cue) => cue.paragraphSortOrder)}
+        />
       ) : null}
 
       <div className="grid grid-cols-2 gap-3">

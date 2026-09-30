@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { secondaryButtonClass } from "@/components/auth/button-styles";
+import { AnswerSheet } from "@/components/dictation/AnswerSheet";
 import { DictationControls } from "@/components/dictation/DictationControls";
 import { SentenceProgress } from "@/components/dictation/SentenceProgress";
 import { SpeedSelector } from "@/components/dictation/SpeedSelector";
 import { VoiceSelector } from "@/components/dictation/VoiceSelector";
-import type { DictationSpeed, DictationVoice } from "@/lib/dictation/options";
+import { revealListenAnswers } from "@/lib/dictation/actions";
+import type { DictationLanguage, DictationSpeed, DictationVoice } from "@/lib/dictation/options";
 
 type Phase = "idle" | "loading" | "playing" | "paused" | "ended";
 
@@ -15,6 +17,7 @@ type DictationPlayerProps = {
   sessionId: string;
   title: string;
   rangeLabel: string;
+  language: DictationLanguage;
   initialVoice: DictationVoice;
   initialSpeed: DictationSpeed;
   voices: readonly DictationVoice[];
@@ -36,6 +39,7 @@ export function DictationPlayer({
   sessionId,
   title,
   rangeLabel,
+  language,
   initialVoice,
   initialSpeed,
   voices,
@@ -51,8 +55,35 @@ export function DictationPlayer({
   const [voice, setVoice] = useState(initialVoice);
   const [speed, setSpeed] = useState(initialSpeed);
   const [error, setError] = useState<string | null>(null);
+  const [answerTexts, setAnswerTexts] = useState<string[] | null>(null);
+  const [answerError, setAnswerError] = useState<string | null>(null);
+  const [answerAttempt, setAnswerAttempt] = useState(0);
   const current = cues[index];
   const finished = phase === "ended" && index === cues.length - 1 && cues.length > 0;
+
+  useEffect(() => {
+    if (!finished) {
+      return;
+    }
+
+    let cancelled = false;
+    setAnswerError(null);
+    void revealListenAnswers(sessionId).then((result) => {
+      if (cancelled) {
+        return;
+      }
+      if ("error" in result) {
+        setAnswerTexts(null);
+        setAnswerError(result.error);
+        return;
+      }
+      setAnswerTexts(result.texts);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [answerAttempt, finished, sessionId]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -181,10 +212,29 @@ export function DictationPlayer({
       </div>
 
       {finished ? (
-        <div className="grid gap-3">
+        <div className="grid gap-4">
           <p className="text-center text-2xl font-semibold text-foreground">
-            {rangeLabel === "全課" ? "全課完成" : "本段完成"}
+            {rangeLabel === "全課" ? "全課完成" : itemUnit === "個" ? "默書完成" : "本段完成"}
           </p>
+          {answerTexts ? (
+            <AnswerSheet
+              texts={answerTexts}
+              itemUnit={itemUnit}
+              language={language}
+              paragraphSortOrders={cues.map((cue) => cue.paragraphSortOrder)}
+            />
+          ) : null}
+          {answerError ? (
+            <div className="grid gap-3">
+              <p role="alert" className="text-base text-error">
+                {answerError}
+              </p>
+              <button type="button" className={secondaryButtonClass} onClick={() => setAnswerAttempt((attempt) => attempt + 1)}>
+                再顯示答案
+              </button>
+            </div>
+          ) : null}
+          {answerTexts || answerError ? null : <p className="text-center text-base text-muted">正在顯示答案…</p>}
           <button
             type="button"
             className={secondaryButtonClass}

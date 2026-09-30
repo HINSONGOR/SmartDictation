@@ -5,7 +5,7 @@ import type { ActionState } from "@/lib/content/action-state";
 import { isUuid } from "@/lib/content/parse";
 import { compareAnswers } from "@/lib/dictation/compare";
 import { buildLessonSentences } from "@/lib/dictation/lesson-sentences";
-import { loadMistakeSentences, loadWordItemTexts } from "@/lib/dictation/load-session";
+import { loadMistakeSentences, loadOwnedSessionItems, loadWordItemTexts } from "@/lib/dictation/load-session";
 import { recordMistake } from "@/lib/dictation/mistakes";
 import { segmentEnglishSentences, segmentSentences } from "@/lib/dictation/segment";
 import { isChineseVoice, isDictationSpeed, isVoiceForLanguage, type DictationLanguage } from "@/lib/dictation/options";
@@ -473,4 +473,18 @@ export async function addPaperMistake(_state: ActionState, formData: FormData): 
   }
 
   redirect(`/mistakes?language=${lesson.language}&added=${clauses.length}`);
+}
+
+export async function revealListenAnswers(sessionId: string): Promise<{ texts: string[] } | { error: string }> {
+  await requireUserId();
+  if (!isUuid(sessionId)) {
+    return { error: "找不到答案。" };
+  }
+
+  const items = await loadOwnedSessionItems(sessionId);
+  if (!items || items.mode !== "listen" || items.texts.length === 0) {
+    return { error: "找不到答案。" };
+  }
+
+  return { texts: items.texts };
 }
